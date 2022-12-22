@@ -1,9 +1,40 @@
-const http = require('http');
-var url = require('url');
-var stringDecoder = require('string_decoder').StringDecoder;
+let http = require('http');
+let https = require('https')
+let url = require('url');
+let stringDecoder = require('string_decoder').StringDecoder;
+let config = require('./config')
+let fs = require('fs')
 
-const server = http.createServer(function (req, res) {
-    // get the url and parse it
+
+//Instantiate the http server
+const httpServer = http.createServer(function (req, res) {
+  unifiedServer(req,res)
+});
+
+//Start the http server
+httpServer.listen(config.httpPort,function () {
+    console.log("The server is listening on port " + config.httpPort)
+
+})
+
+//Instantiate the HTTPS server
+let httpsServerOptions = {
+    'key': fs.readFileSync('./HTTPS/key.pem'),
+    'cert': fs.readFileSync('./HTTPS/cert.pem')
+}
+let httpsServer = https.createServer(httpsServerOptions,function (req,res) {
+    unifiedServer(req,res);
+})
+
+//Start the htps server
+httpsServer.listen(config.httpsPort,function () {
+    console.log("The server is listening on port " + config.httpsPort)
+});
+
+// All the server logic for both the http and https server
+
+let unifiedServer = function (req,res) {
+// get the url and parse it
     const parsedUrl = url.parse(req.url, true);
     // get the path
     const path = parsedUrl.pathname;
@@ -28,15 +59,62 @@ const server = http.createServer(function (req, res) {
 
     req.on('end',function () {
         buffer += decoder.end();
-        //Send the response
-        res.end("Hello World!\n")
-       // log the response
-      console.log('Request received with this payload ',buffer)
+
+        //Choose the handler this request should go to. If one is not found, use the not Found handler
+        let chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
+
+        //Construct the data object to send to the handler
+
+        let data = {
+            'trimmedPath': trimmedPath,
+            'queryStringObject': queryStringObject,
+            'method': method,
+            'headers': headers,
+            'payload': buffer
+        };
+
+        //Route the request specified to the router
+
+        chosenHandler(data, function (statusCode, payload) {
+            //Use status code called back by the handler, or default to 200
+            statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
+
+            //Use the payload called back by the handler or default to an empty object
+            payload = typeof (payload) === 'object' ? payload : {}
+
+            //Convert the payload to a string
+            let payloadString = JSON.stringify(payload);
+
+            //Return the response
+            res.setHeader('Content-Type', 'application/json')
+            res.writeHead(statusCode);
+            res.end(payloadString);
+
+            console.log('Returning this response: ', statusCode, payloadString)
+
+        });
     });
-});
+};
 
+//Define the request router
+let handlers = {};
 
-server.listen(3000,function () {
-    console.log("The server is listening on port 3000")
+//Ping handler
+handlers.ping = function (data,callback) {
+    callback(200);
+};
 
-})
+//Sample handler
+handlers.sample = function (data,callback) {
+//Callback a http status code, and a payload object
+    callback(406,{'name': 'sample handler'});
+}
+//Not found handler
+handlers.notFound = function (data,callback) {
+   callback(404);
+}
+
+let router = {
+    'sample': handlers.sample,
+    'ping': handlers.ping
+}
