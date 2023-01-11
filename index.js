@@ -4,13 +4,7 @@ let url = require('url');
 let stringDecoder = require('string_decoder').StringDecoder;
 let config = require('./config')
 let fs = require('fs')
-let _data = require('./lib/data')
 
-//TESTING
-
-_data.delete('test','newFile',function (err){
-    console.log('This was an error',err)
-})
 
 //Instantiate the http server
 const httpServer = http.createServer(function (req, res) {
