@@ -4,7 +4,13 @@ let url = require('url');
 let stringDecoder = require('string_decoder').StringDecoder;
 let config = require('./config')
 let fs = require('fs')
+let _data = require('./lib/data')
 
+//TESTING
+
+_data.delete('test','newFile',function (err){
+    console.log('This was an error',err)
+})
 
 //Instantiate the http server
 const httpServer = http.createServer(function (req, res) {
@@ -26,7 +32,7 @@ let httpsServer = https.createServer(httpsServerOptions,function (req,res) {
     unifiedServer(req,res);
 })
 
-//Start the htps server
+//Start the https server
 httpsServer.listen(config.httpsPort,function () {
     console.log("The server is listening on port " + config.httpsPort)
 });
