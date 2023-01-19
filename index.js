@@ -4,6 +4,8 @@ let url = require('url');
 let stringDecoder = require('string_decoder').StringDecoder;
 let config = require('./config')
 let fs = require('fs')
+let handlers = require('./lib/handlers')
+let helpers = require('./lib/helpers')
 
 
 //Instantiate the http server
@@ -70,7 +72,7 @@ let unifiedServer = function (req,res) {
             'queryStringObject': queryStringObject,
             'method': method,
             'headers': headers,
-            'payload': buffer
+            'payload': helpers.parseJsonToObject(buffer)
         };
 
         //Route the request specified to the router
@@ -96,25 +98,10 @@ let unifiedServer = function (req,res) {
     });
 };
 
-//Define the request router
-let handlers = {};
-
-//Ping handler
-handlers.ping = function (data,callback) {
-    callback(200);
-};
-
-//Sample handler
-handlers.sample = function (data,callback) {
-//Callback a http status code, and a payload object
-    callback(406,{'name': 'sample handler'});
-}
-//Not found handler
-handlers.notFound = function (data,callback) {
-   callback(404);
-}
-
 let router = {
     'sample': handlers.sample,
-    'ping': handlers.ping
+    'ping': handlers.ping,
+    'users':handlers.users
 }
+
+
