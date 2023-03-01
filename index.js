@@ -2,7 +2,7 @@ let http = require('http');
 let https = require('https')
 let url = require('url');
 let stringDecoder = require('string_decoder').StringDecoder;
-let config = require('./config')
+let config = require('./lib/config')
 let fs = require('fs')
 let handlers = require('./lib/handlers')
 let helpers = require('./lib/helpers')
@@ -102,7 +102,8 @@ let router = {
     'sample': handlers.sample,
     'ping': handlers.ping,
     'users':handlers.users,
-    'tokens':handlers.tokens
+    'tokens':handlers.tokens,
+    'checks': handlers.checks
 }
 
 
